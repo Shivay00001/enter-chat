@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us - EnterChat</title>
+  <meta name="description" content="Get in touch with the EnterChat team for support, feedback, or inquiries.">
+  <style>
+    :root { --brand: #0097A7; --bg: #121212; --surface: #1E1E1E; --text: #E8E8E8; --text2: #9E9E9E; --accent: #7C4DFF; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+    .container { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+    header { text-align: center; margin-bottom: 48px; }
+    header h1 { font-size: 2rem; background: linear-gradient(135deg, var(--brand), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    header p { color: var(--text2); margin-top: 8px; }
+    .logo { width: 48px; height: 48px; background: linear-gradient(135deg, var(--brand), var(--accent)); border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+    .logo svg { width: 28px; height: 28px; fill: white; }
+    h2 { font-size: 1.3rem; margin: 32px 0 12px; color: var(--brand); }
+    p, li { color: var(--text2); margin-bottom: 8px; }
+    a { color: var(--brand); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .card { background: var(--surface); border-radius: 12px; padding: 24px; margin: 16px 0; border: 1px solid #333; }
+    .nav { display: flex; gap: 16px; justify-content: center; margin-bottom: 32px; flex-wrap: wrap; }
+    .nav a { padding: 8px 16px; background: var(--surface); border-radius: 8px; font-size: 0.9rem; border: 1px solid #333; }
+    .nav a:hover { border-color: var(--brand); }
+    .contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 24px; }
+    .contact-item { background: var(--surface); border: 1px solid #333; border-radius: 12px; padding: 24px; text-align: center; transition: border-color 0.2s; }
+    .contact-item:hover { border-color: var(--brand); }
+    .contact-item .icon { font-size: 2rem; margin-bottom: 8px; }
+    .contact-item h3 { font-size: 1rem; margin-bottom: 4px; }
+    .contact-item p { font-size: 0.9rem; }
+    .effective { text-align: center; color: var(--text2); font-size: 0.9rem; margin-top: 48px; padding-top: 24px; border-top: 1px solid #333; }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></div>
+      <h1>Contact Us</h1>
+      <p>We'd love to hear from you. Reach out for support, feedback, or partnerships.</p>
+    </header>
+
+    <nav class="nav">
+      <a href="/privacy-policy">Privacy Policy</a>
+      <a href="/terms">Terms of Service</a>
+      <a href="/delete-account">Delete Account</a>
+      <a href="/contact">Contact Us</a>
+    </nav>
+
+    <div class="contact-grid">
+      <div class="contact-item">
+        <div class="icon">🛟</div>
+        <h3>General Support</h3>
+        <p><a href="mailto:support@enterchat.app">support@enterchat.app</a></p>
+      </div>
+      <div class="contact-item">
+        <div class="icon">🔒</div>
+        <h3>Privacy & Data</h3>
+        <p><a href="mailto:privacy@enterchat.app">privacy@enterchat.app</a></p>
+      </div>
+      <div class="contact-item">
+        <div class="icon">⚖️</div>
+        <h3>Legal</h3>
+        <p><a href="mailto:legal@enterchat.app">legal@enterchat.app</a></p>
+      </div>
+      <div class="contact-item">
+        <div class="icon">🐛</div>
+        <h3>Bug Reports</h3>
+        <p><a href="mailto:bugs@enterchat.app">bugs@enterchat.app</a></p>
+      </div>
+      <div class="contact-item">
+        <div class="icon">🤝</div>
+        <h3>Partnerships</h3>
+        <p><a href="mailto:partners@enterchat.app">partners@enterchat.app</a></p>
+      </div>
+      <div class="contact-item">
+        <div class="icon">🗑️</div>
+        <h3>Delete Account</h3>
+        <p><a href="mailto:delete@enterchat.app">delete@enterchat.app</a></p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Response Times</h2>
+      <ul>
+        <li><strong>General support:</strong> Within 24 hours</li>
+        <li><strong>Account deletion:</strong> Within 7 business days</li>
+        <li><strong>Privacy inquiries:</strong> Within 30 days (GDPR requirement)</li>
+        <li><strong>Bug reports:</strong> Acknowledged within 48 hours</li>
+        <li><strong>Security vulnerabilities:</strong> Acknowledged within 24 hours</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>In-App Feedback</h2>
+      <p>You can also reach us directly from the app:</p>
+      <p><strong>Settings → Help & Feedback → Send Feedback</strong></p>
+      <p>This automatically includes device information to help us diagnose issues faster.</p>
+    </div>
+
+    <p class="effective">EnterChat • Secure Communication</p>
+  </div>
+</body>
+</html>

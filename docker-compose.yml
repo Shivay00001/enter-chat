@@ -1,0 +1,81 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: enterchat-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-enterchat}
+      POSTGRES_USER: ${DB_USER:-enterchat}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-enterchat_dev_password}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-enterchat} -d ${DB_NAME:-enterchat}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: enterchat-redis
+    restart: unless-stopped
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./services/api_gateway
+      dockerfile: Dockerfile
+    container_name: enterchat-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      PORT: 3000
+      WS_PORT: 3001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-enterchat}
+      DB_USER: ${DB_USER:-enterchat}
+      DB_PASSWORD: ${DB_PASSWORD:-enterchat_dev_password}
+      DB_SSL: "false"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_change_in_production_minimum_32_chars}
+      JWT_ACCESS_TOKEN_EXPIRY: 15m
+      JWT_REFRESH_TOKEN_EXPIRY: 30d
+      JWT_ISSUER: enterchat
+      OTP_SMS_PROVIDER: stub
+      CORS_ORIGIN: "*"
+      MEDIA_STORAGE_PROVIDER: local
+      MEDIA_LOCAL_PATH: /app/uploads
+      MEDIA_MAX_FILE_SIZE_MB: 100
+      PUSH_PROVIDER: stub
+    ports:
+      - "${PORT:-3000}:3000"
+      - "${WS_PORT:-3001}:3001"
+    volumes:
+      - media_uploads:/app/uploads
+
+volumes:
+  postgres_data:
+  redis_data:
+  media_uploads:

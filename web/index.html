@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EnterChat — Secure, Fast, Decentralized Messaging</title>
+  <meta name="description" content="EnterChat: A secure, decentralized communication platform. End-to-end encryption, blazing fast, privacy-first messaging.">
+  <meta name="keywords" content="EnterChat, secure messaging, encrypted chat, privacy, decentralized">
+  <meta property="og:title" content="EnterChat — Secure Messaging">
+  <meta property="og:description" content="Fast, secure, and decentralized messaging for everyone.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://enterchat.app">
+  <link rel="canonical" href="https://enterchat.app">
+  <style>
+    :root { --brand: #0097A7; --accent: #7C4DFF; --bg: #0a0a0a; --surface: #141414; --text: #E8E8E8; --text2: #9E9E9E; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+    a { color: var(--brand); text-decoration: none; }
+
+    /* Navbar */
+    nav { position: fixed; top: 0; width: 100%; background: rgba(10,10,10,0.85); backdrop-filter: blur(20px); z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { display: flex; align-items: center; gap: 10px; font-size: 1.3rem; font-weight: 700; }
+    .nav-logo .dot { width: 32px; height: 32px; background: linear-gradient(135deg, var(--brand), var(--accent)); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .nav-logo .dot svg { width: 20px; height: 20px; fill: white; }
+    .nav-links { display: flex; gap: 32px; align-items: center; }
+    .nav-links a { color: var(--text2); font-size: 0.9rem; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta { background: var(--brand); color: white !important; padding: 8px 20px; border-radius: 8px; font-weight: 500; font-size: 0.9rem; transition: transform 0.2s, box-shadow 0.2s; }
+    .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,151,167,0.4); }
+
+    /* Hero */
+    .hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 120px 24px 80px; position: relative; }
+    .hero::before { content: ''; position: absolute; top: -200px; left: 50%; transform: translateX(-50%); width: 800px; height: 800px; background: radial-gradient(circle, rgba(0,151,167,0.15) 0%, transparent 70%); pointer-events: none; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(0,151,167,0.1); border: 1px solid rgba(0,151,167,0.2); border-radius: 100px; padding: 6px 16px; font-size: 0.85rem; color: var(--brand); margin-bottom: 24px; }
+    .hero h1 { font-size: clamp(2.5rem, 6vw, 4.5rem); line-height: 1.1; font-weight: 800; margin-bottom: 20px; }
+    .hero h1 .gradient { background: linear-gradient(135deg, var(--brand), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { font-size: 1.2rem; color: var(--text2); max-width: 600px; line-height: 1.6; margin-bottom: 40px; }
+    .hero-buttons { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+    .btn-primary { background: linear-gradient(135deg, var(--brand), #00838F); color: white; padding: 14px 32px; border-radius: 12px; font-weight: 600; font-size: 1rem; border: none; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,151,167,0.4); }
+    .btn-secondary { background: transparent; border: 1px solid rgba(255,255,255,0.15); color: var(--text); padding: 14px 32px; border-radius: 12px; font-weight: 500; font-size: 1rem; cursor: pointer; transition: all 0.3s; }
+    .btn-secondary:hover { border-color: var(--brand); background: rgba(0,151,167,0.05); }
+
+    /* Features */
+    .features { max-width: 1200px; margin: 0 auto; padding: 100px 24px; }
+    .features h2 { text-align: center; font-size: 2.5rem; margin-bottom: 60px; }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+    .feature-card { background: var(--surface); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 32px; transition: all 0.3s; }
+    .feature-card:hover { border-color: rgba(0,151,167,0.3); transform: translateY(-4px); box-shadow: 0 16px 48px rgba(0,0,0,0.4); }
+    .feature-icon { width: 48px; height: 48px; background: linear-gradient(135deg, var(--brand), var(--accent)); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; font-size: 1.5rem; }
+    .feature-card h3 { font-size: 1.2rem; margin-bottom: 8px; }
+    .feature-card p { color: var(--text2); font-size: 0.95rem; line-height: 1.6; }
+
+    /* Stats */
+    .stats { background: linear-gradient(135deg, rgba(0,151,167,0.1), rgba(124,77,255,0.1)); padding: 80px 24px; }
+    .stats-inner { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; text-align: center; }
+    .stat-number { font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, var(--brand), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .stat-label { color: var(--text2); font-size: 0.9rem; margin-top: 4px; }
+
+    /* CTA */
+    .cta { text-align: center; padding: 100px 24px; }
+    .cta h2 { font-size: 2.5rem; margin-bottom: 16px; }
+    .cta p { color: var(--text2); font-size: 1.1rem; margin-bottom: 32px; }
+
+    /* Footer */
+    footer { border-top: 1px solid rgba(255,255,255,0.06); padding: 48px 24px; }
+    .footer-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; }
+    .footer-brand p { color: var(--text2); font-size: 0.9rem; margin-top: 12px; line-height: 1.6; }
+    footer h4 { margin-bottom: 16px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text2); }
+    footer ul { list-style: none; }
+    footer ul li { margin-bottom: 8px; }
+    footer ul a { color: var(--text2); font-size: 0.9rem; transition: color 0.2s; }
+    footer ul a:hover { color: var(--brand); }
+    .footer-bottom { max-width: 1200px; margin: 24px auto 0; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text2); }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .stats-inner { grid-template-columns: repeat(2, 1fr); }
+      .footer-inner { grid-template-columns: 1fr 1fr; }
+    }
+
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    .animate-float { animation: float 3s ease-in-out infinite; }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Navbar -->
+  <nav>
+    <div class="nav-inner">
+      <div class="nav-logo">
+        <div class="dot"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></div>
+        EnterChat
+      </div>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="/privacy-policy">Privacy</a>
+        <a href="/terms">Terms</a>
+        <a href="/contact">Contact</a>
+        <a href="#download" class="nav-cta">Download</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-badge">🔒 End-to-end encrypted</div>
+    <h1>Communication<br><span class="gradient">without compromise.</span></h1>
+    <p>EnterChat is a secure, fast, and decentralized messaging platform. Built for privacy. Designed for everyone.</p>
+    <div class="hero-buttons">
+      <a href="#download" class="btn-primary">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.523 0H6.477L0 6.477v11.046L6.477 24h11.046L24 17.523V6.477L17.523 0zM12 18.5l-6.5-6.5h4V5h5v7h4L12 18.5z"/></svg>
+        Download for Android
+      </a>
+      <a href="#features" class="btn-secondary">Learn more</a>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features" id="features">
+    <h2>Built for what matters</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🔐</div>
+        <h3>End-to-End Encryption</h3>
+        <p>Every message, call, and file is encrypted using the Signal Protocol. Not even we can read your messages.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Blazing Fast</h3>
+        <p>Optimized WebSocket connections, local caching, and offline-first architecture. Messages arrive instantly.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌐</div>
+        <h3>Decentralized</h3>
+        <p>No single point of failure. Built on federation-ready architecture inspired by Matrix protocol.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">👥</div>
+        <h3>Communities</h3>
+        <p>Create communities with channels, topics, and roles. Discord-like organization with chat-app simplicity.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📞</div>
+        <h3>Voice & Video Calls</h3>
+        <p>Crystal-clear encrypted calls. Group calls for up to 32 participants with screen sharing.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🗑️</div>
+        <h3>Your Data, Your Control</h3>
+        <p>Delete your account and all data anytime. No ads, no tracking, no data selling. Ever.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="stats">
+    <div class="stats-inner">
+      <div>
+        <div class="stat-number">256-bit</div>
+        <div class="stat-label">AES Encryption</div>
+      </div>
+      <div>
+        <div class="stat-number">&lt;100ms</div>
+        <div class="stat-label">Message Delivery</div>
+      </div>
+      <div>
+        <div class="stat-number">100MB</div>
+        <div class="stat-label">File Sharing</div>
+      </div>
+      <div>
+        <div class="stat-number">0</div>
+        <div class="stat-label">Ads & Trackers</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta" id="download">
+    <h2>Ready to chat securely?</h2>
+    <p>Download EnterChat and take control of your conversations.</p>
+    <div class="hero-buttons">
+      <a href="#" class="btn-primary">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3.609 1.814L13.792 12 3.609 22.186a.996.996 0 01-.609-.92V2.734a1 1 0 01.609-.92zM14.5 12.707l2.302 2.302-10.937 6.298L14.5 12.707zM19.266 11.246L17.4 10.17l-2.192 1.83 2.192 1.83 1.866-1.076a1 1 0 000-1.508zM5.865 2.694L16.802 8.99 14.5 11.293 5.865 2.694z"/></svg>
+        Google Play
+      </a>
+      <a href="#" class="btn-secondary">Coming to iOS</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="nav-logo">
+          <div class="dot"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" fill="white"/></svg></div>
+          EnterChat
+        </div>
+        <p>Secure, fast, and decentralized messaging platform. Your conversations, your privacy.</p>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <ul>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#download">Download</a></li>
+          <li><a href="#">Security</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="/privacy-policy">Privacy Policy</a></li>
+          <li><a href="/terms">Terms of Service</a></li>
+          <li><a href="/delete-account">Delete Account</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Support</h4>
+        <ul>
+          <li><a href="/contact">Contact Us</a></li>
+          <li><a href="mailto:support@enterchat.app">Email</a></li>
+          <li><a href="#">FAQ</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 EnterChat. All rights reserved.</span>
+      <span>Made with 🔒 for privacy</span>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delete Account - EnterChat</title>
+  <meta name="description" content="Delete your EnterChat account and all associated data permanently.">
+  <style>
+    :root { --brand: #0097A7; --bg: #121212; --surface: #1E1E1E; --text: #E8E8E8; --text2: #9E9E9E; --accent: #7C4DFF; --danger: #EF5350; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+    .container { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+    header { text-align: center; margin-bottom: 48px; }
+    header h1 { font-size: 2rem; color: var(--danger); }
+    header p { color: var(--text2); margin-top: 8px; }
+    .logo { width: 48px; height: 48px; background: linear-gradient(135deg, var(--brand), var(--accent)); border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+    .logo svg { width: 28px; height: 28px; fill: white; }
+    h2 { font-size: 1.3rem; margin: 32px 0 12px; color: var(--brand); }
+    p, li { color: var(--text2); margin-bottom: 8px; }
+    ul { padding-left: 20px; }
+    .card { background: var(--surface); border-radius: 12px; padding: 24px; margin: 16px 0; border: 1px solid #333; }
+    .warning { background: rgba(239,83,80,0.1); border: 1px solid rgba(239,83,80,0.3); border-radius: 12px; padding: 24px; margin: 16px 0; }
+    .warning h3 { color: var(--danger); margin-bottom: 8px; }
+    .steps { counter-reset: step; }
+    .steps li { counter-increment: step; list-style: none; position: relative; padding-left: 48px; margin-bottom: 24px; }
+    .steps li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 32px; height: 32px; background: var(--brand); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.9rem; }
+    a { color: var(--brand); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .nav { display: flex; gap: 16px; justify-content: center; margin-bottom: 32px; flex-wrap: wrap; }
+    .nav a { padding: 8px 16px; background: var(--surface); border-radius: 8px; font-size: 0.9rem; border: 1px solid #333; }
+    .nav a:hover { border-color: var(--brand); }
+    .effective { text-align: center; color: var(--text2); font-size: 0.9rem; margin-top: 48px; padding-top: 24px; border-top: 1px solid #333; }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></div>
+      <h1>Delete Your Account</h1>
+      <p>Permanently delete your EnterChat account and all associated data.</p>
+    </header>
+
+    <nav class="nav">
+      <a href="/privacy-policy">Privacy Policy</a>
+      <a href="/terms">Terms of Service</a>
+      <a href="/delete-account">Delete Account</a>
+      <a href="/contact">Contact Us</a>
+    </nav>
+
+    <div class="warning">
+      <h3>⚠️ This action is permanent and cannot be undone</h3>
+      <p>Deleting your account will permanently remove:</p>
+      <ul>
+        <li>Your profile information (name, photo, status)</li>
+        <li>All your messages from our servers</li>
+        <li>Your group memberships and community subscriptions</li>
+        <li>Your call history</li>
+        <li>All media files you've uploaded</li>
+        <li>Your device registrations and sessions</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>How to Delete Your Account</h2>
+      <h3>Option 1: From the App (Recommended)</h3>
+      <ul class="steps">
+        <li>
+          <strong>Open EnterChat</strong>
+          <p>Launch the app and make sure you're logged in.</p>
+        </li>
+        <li>
+          <strong>Go to Settings</strong>
+          <p>Tap the <strong>Settings</strong> tab (gear icon) at the bottom.</p>
+        </li>
+        <li>
+          <strong>Tap "Account"</strong>
+          <p>Scroll down to the Account section.</p>
+        </li>
+        <li>
+          <strong>Tap "Delete Account"</strong>
+          <p>Tap the red "Delete Account" button.</p>
+        </li>
+        <li>
+          <strong>Confirm with OTP</strong>
+          <p>For security, you'll receive a verification code. Enter it to confirm deletion.</p>
+        </li>
+        <li>
+          <strong>Account deleted</strong>
+          <p>Your account and all data will be permanently deleted within 90 days.</p>
+        </li>
+      </ul>
+
+      <h3>Option 2: Via Email</h3>
+      <p>If you cannot access the app, send an email to <a href="mailto:delete@enterchat.app">delete@enterchat.app</a> with:</p>
+      <ul>
+        <li>Subject: "Account Deletion Request"</li>
+        <li>The phone number or email associated with your account</li>
+        <li>Reason for deletion (optional)</li>
+      </ul>
+      <p>We will verify your identity and process the deletion within 7 business days.</p>
+    </div>
+
+    <div class="card">
+      <h2>Data Deletion Timeline</h2>
+      <ul>
+        <li><strong>Immediately</strong> — Account is deactivated, you're logged out</li>
+        <li><strong>Within 24 hours</strong> — Profile removed from search and contacts</li>
+        <li><strong>Within 30 days</strong> — Messages deleted from our servers</li>
+        <li><strong>Within 90 days</strong> — All data permanently erased from backups</li>
+      </ul>
+      <p><em>Note: Messages you sent to other users may still exist on their devices. We cannot delete data from other users' devices.</em></p>
+    </div>
+
+    <div class="card">
+      <h2>Questions?</h2>
+      <p>Contact us at <a href="mailto:privacy@enterchat.app">privacy@enterchat.app</a> for any questions about account deletion.</p>
+    </div>
+
+    <p class="effective">Last Updated: June 18, 2026</p>
+  </div>
+</body>
+</html>

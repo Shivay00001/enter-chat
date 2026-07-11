@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - EnterChat</title>
+  <meta name="description" content="EnterChat Privacy Policy - Learn how we protect your data and privacy.">
+  <style>
+    :root { --brand: #0097A7; --bg: #121212; --surface: #1E1E1E; --text: #E8E8E8; --text2: #9E9E9E; --accent: #7C4DFF; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+    .container { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+    header { text-align: center; margin-bottom: 48px; }
+    header h1 { font-size: 2rem; background: linear-gradient(135deg, var(--brand), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    header p { color: var(--text2); margin-top: 8px; }
+    .logo { width: 48px; height: 48px; background: linear-gradient(135deg, var(--brand), var(--accent)); border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+    .logo svg { width: 28px; height: 28px; fill: white; }
+    h2 { font-size: 1.3rem; margin: 32px 0 12px; color: var(--brand); }
+    h3 { font-size: 1.1rem; margin: 20px 0 8px; }
+    p, li { color: var(--text2); margin-bottom: 8px; }
+    ul { padding-left: 20px; }
+    .card { background: var(--surface); border-radius: 12px; padding: 24px; margin: 16px 0; border: 1px solid #333; }
+    .effective { text-align: center; color: var(--text2); font-size: 0.9rem; margin-top: 48px; padding-top: 24px; border-top: 1px solid #333; }
+    a { color: var(--brand); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .nav { display: flex; gap: 16px; justify-content: center; margin-bottom: 32px; flex-wrap: wrap; }
+    .nav a { padding: 8px 16px; background: var(--surface); border-radius: 8px; font-size: 0.9rem; border: 1px solid #333; }
+    .nav a:hover { border-color: var(--brand); }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></div>
+      <h1>EnterChat Privacy Policy</h1>
+      <p>Your privacy is our priority. Here's how we protect your data.</p>
+    </header>
+
+    <nav class="nav">
+      <a href="/privacy-policy">Privacy Policy</a>
+      <a href="/terms">Terms of Service</a>
+      <a href="/delete-account">Delete Account</a>
+      <a href="/contact">Contact Us</a>
+    </nav>
+
+    <div class="card">
+      <h2>1. Information We Collect</h2>
+      <h3>1.1 Information You Provide</h3>
+      <ul>
+        <li><strong>Phone number or email</strong> — used solely for account verification via OTP. We store a cryptographic hash, not your raw phone number.</li>
+        <li><strong>Display name and profile photo</strong> — optional, used to personalize your profile.</li>
+        <li><strong>Messages</strong> — encrypted end-to-end. We cannot read your messages.</li>
+      </ul>
+      <h3>1.2 Automatically Collected</h3>
+      <ul>
+        <li><strong>Device information</strong> — device model, OS version, app version (for compatibility and debugging).</li>
+        <li><strong>Usage data</strong> — feature usage patterns (anonymized, no message content).</li>
+        <li><strong>IP address</strong> — stored as a SHA-256 hash for security (rate limiting, abuse prevention).</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>2. How We Use Your Information</h2>
+      <ul>
+        <li>Provide, maintain, and improve the EnterChat service</li>
+        <li>Verify your identity during sign-up and login</li>
+        <li>Deliver messages and notifications</li>
+        <li>Detect and prevent fraud, abuse, and security threats</li>
+        <li>Comply with legal obligations</li>
+      </ul>
+      <p><strong>We never:</strong></p>
+      <ul>
+        <li>Sell your personal data to third parties</li>
+        <li>Use your data for targeted advertising</li>
+        <li>Read your encrypted messages</li>
+        <li>Share your phone number with other users without consent</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>3. Data Storage & Security</h2>
+      <ul>
+        <li>Messages are end-to-end encrypted using the Signal Protocol</li>
+        <li>Passwords and tokens are hashed with bcrypt/SHA-256</li>
+        <li>All data in transit is encrypted via TLS 1.2+</li>
+        <li>Data at rest is encrypted on our servers</li>
+        <li>We use PostgreSQL with encrypted backups</li>
+        <li>Regular security audits and penetration testing</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>4. Data Retention</h2>
+      <ul>
+        <li>Account data is retained while your account is active</li>
+        <li>Deleted messages are permanently removed within 30 days</li>
+        <li>When you delete your account, all data is permanently erased within 90 days</li>
+        <li>Anonymous, aggregated analytics may be retained indefinitely</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>5. Your Rights</h2>
+      <p>You have the right to:</p>
+      <ul>
+        <li><strong>Access</strong> — Request a copy of your personal data</li>
+        <li><strong>Correction</strong> — Update or correct inaccurate data</li>
+        <li><strong>Deletion</strong> — <a href="/delete-account">Delete your account and all associated data</a></li>
+        <li><strong>Portability</strong> — Export your data in a machine-readable format</li>
+        <li><strong>Restriction</strong> — Limit how we process your data</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>6. Third-Party Services</h2>
+      <ul>
+        <li><strong>SMS providers</strong> (Twilio/AWS SNS) — for OTP delivery only</li>
+        <li><strong>Cloud infrastructure</strong> — servers hosted on secure, SOC 2 compliant providers</li>
+        <li><strong>Push notifications</strong> — Firebase Cloud Messaging (FCM) / Apple Push Notification Service (APNs)</li>
+      </ul>
+      <p>No third-party analytics or advertising SDKs are included in the app.</p>
+    </div>
+
+    <div class="card">
+      <h2>7. Children's Privacy</h2>
+      <p>EnterChat is not intended for users under 13 years of age. We do not knowingly collect personal information from children under 13. If we become aware that we have collected data from a child under 13, we will delete it immediately.</p>
+    </div>
+
+    <div class="card">
+      <h2>8. Changes to This Policy</h2>
+      <p>We may update this Privacy Policy from time to time. We will notify you of significant changes through the app or via email. Continued use of EnterChat after changes constitutes acceptance of the updated policy.</p>
+    </div>
+
+    <div class="card">
+      <h2>9. Contact Us</h2>
+      <p>For privacy-related inquiries:</p>
+      <ul>
+        <li>Email: <a href="mailto:privacy@enterchat.app">privacy@enterchat.app</a></li>
+        <li>Web: <a href="/contact">enterchat.app/contact</a></li>
+      </ul>
+    </div>
+
+    <p class="effective">Effective Date: June 18, 2026 • Last Updated: June 18, 2026</p>
+  </div>
+</body>
+</html>

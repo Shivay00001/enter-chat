@@ -1,0 +1,55 @@
+# === Node.js ===
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+.npm
+.yarn/cache
+
+# === Flutter ===
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.packages
+**/.pub-cache/
+**/.pub/
+**/pubspec.lock
+# Keep pubspec.lock for apps, ignore for packages
+!apps/mobile_flutter/pubspec.lock
+
+# === Environment & Secrets ===
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.p12
+*.jks
+secrets/
+
+# === IDE ===
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# === Docker ===
+.docker-data/
+
+# === OS ===
+.DS_Store
+*.log
+*.pid
+
+# === Coverage & Test ===
+coverage/
+.nyc_output/
+*.lcov
+
+# === Misc ===
+*.bak
+*.tmp

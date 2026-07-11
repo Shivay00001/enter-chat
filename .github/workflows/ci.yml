@@ -1,0 +1,120 @@
+name: EnterChat CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  backend:
+    name: Backend - Lint, Test, Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/api_gateway
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: enterchat_test
+          POSTGRES_USER: enterchat
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U enterchat -d enterchat_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: services/api_gateway/package-lock.json
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+        env:
+          NODE_ENV: test
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: enterchat_test
+          DB_USER: enterchat
+          DB_PASSWORD: test_password
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          JWT_SECRET: test_jwt_secret_minimum_32_characters_long
+          OTP_SMS_PROVIDER: stub
+
+      - run: npm run build
+
+  flutter:
+    name: Flutter - Analyze, Test, Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile_flutter
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - run: flutter build apk --debug
+
+  migrations:
+    name: Database Migrations
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: enterchat_migration_test
+          POSTGRES_USER: enterchat
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U enterchat -d enterchat_migration_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run migrations
+        run: |
+          for f in infra/migrations/*.sql; do
+            echo "Running $f..."
+            PGPASSWORD=test_password psql -h localhost -U enterchat -d enterchat_migration_test -f "$f"
+          done
+
+      - name: Verify tables exist
+        run: |
+          PGPASSWORD=test_password psql -h localhost -U enterchat -d enterchat_migration_test -c "\dt" | grep -E "users|devices|sessions|chats|messages|media_objects"
