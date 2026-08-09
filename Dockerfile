@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM ubuntu:22.04
 WORKDIR /app
 COPY . .
-CMD ["echo", "Docker container started, but stack was unknown!"]
+CMD ["echo", "Custom image ready!"]
