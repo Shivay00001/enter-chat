@@ -7,9 +7,9 @@ vi.mock('pg', () => {
     connect: vi.fn(),
     query: vi.fn().mockResolvedValue({ 
       rows: [{ 
-        id: 'mock-id',
+        id: '11111111-1111-4111-8111-111111111111',
         otpHash: '$2a$10$abcdefghijklmnopqrstuv', // Valid-looking bcrypt hash
-        expiresAt: new Date(Date.now() + 10000),
+        expiresAt: new Date(Date.now() + 3600_000),
         attempts: 0,
         maxAttempts: 3
       }] 
