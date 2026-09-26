@@ -5,7 +5,7 @@
 ALTER TABLE messages ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ;
 
 CREATE INDEX IF NOT EXISTS idx_messages_delivery
-  ON messages (chat_id, sender_id) WHERE delivered_at IS NULL;
+  ON messages (chat_id, sender_user_id) WHERE delivered_at IS NULL;
 
 -- 2. E2EE Key Bundles — X3DH protocol support
 -- Each device uploads a key bundle containing identity key, signed prekey, and one-time prekeys.

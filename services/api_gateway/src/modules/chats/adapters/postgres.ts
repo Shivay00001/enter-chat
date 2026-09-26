@@ -8,9 +8,27 @@ const chatLogger = logger.child({ component: 'chat-repo' });
  * PostgreSQL Chat & Message Repository — PRODUCTION.
  * Fully functional CRUD: create, read, update, delete.
  * No mock data. Everything from the database.
+ *
+ * Aligned to infra/migrations/*.sql (see docs/schema-trd.md):
+ *   chats.type (chat_type enum), chat_members.state (member_state enum, composite PK),
+ *   messages partitioned with sender_user_id / message_type / plaintext_body / state.
  */
 
 // --- CHAT REPOSITORY ---
+
+// Map the API-level chat type to the migration chat_type enum.
+function toDbChatType(chatType: 'direct' | 'group' | 'channel' | 'community'): string {
+  return chatType === 'community' ? 'community_room' : chatType;
+}
+
+// Map the API-level message type to the migration message_type enum.
+function toDbMessageType(msgType: string): string {
+  switch (msgType) {
+    case 'voice_note': return 'voice';
+    case 'file': return 'document';
+    default: return msgType;
+  }
+}
 
 export class PostgresChatRepository {
   constructor(private readonly pool: Pool) {}
@@ -30,9 +48,10 @@ export class PostgresChatRepository {
 
       const chatId = uuidv4();
       await client.query(
-        `INSERT INTO chats (id, chat_type, title, description, avatar_media_id, state, created_by, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, $5, 'active', $6, NOW(), NOW())`,
-        [chatId, data.chatType, data.title || null, data.description || null, data.avatarUrl || null, data.creatorId],
+        `INSERT INTO chats (id, type, title, description, avatar_media_id, created_by, created_at)
+         VALUES ($1, $2::chat_type, $3, $4, $5, $6, NOW())`,
+        [chatId, toDbChatType(data.chatType), data.title || null, data.description || null,
+         data.avatarUrl || null, data.creatorId],
       );
 
       // Add all members including creator
@@ -40,9 +59,10 @@ export class PostgresChatRepository {
       for (const userId of allMembers) {
         const role = userId === data.creatorId ? 'owner' : 'member';
         await client.query(
-          `INSERT INTO chat_members (id, chat_id, user_id, role, member_state, joined_at)
-           VALUES ($1, $2, $3, $4, 'active', NOW())`,
-          [uuidv4(), chatId, userId, role],
+          `INSERT INTO chat_members (chat_id, user_id, role, state, joined_at)
+           VALUES ($1, $2, $3, 'active', NOW())
+           ON CONFLICT (chat_id, user_id) DO UPDATE SET state = 'active', joined_at = NOW()`,
+          [chatId, userId, role],
         );
       }
 
@@ -60,43 +80,43 @@ export class PostgresChatRepository {
   /** Get all chats for a user with last message preview */
   async getChatsByUserId(userId: string) {
     const { rows } = await this.pool.query(
-      `SELECT 
-        c.id, c.chat_type as "chatType", c.title, c.description, c.avatar_media_id as "avatarUrl",
-        c.state, c.created_at as "createdAt", c.updated_at as "updatedAt",
+      `SELECT
+        c.id, c.type as "chatType", c.title, c.description, c.avatar_media_id as "avatarUrl",
+        c.created_at as "createdAt",
         -- Last message info
-        m.content as "lastMessageContent", m.sender_id as "lastMessageSenderId",
-        m.created_at as "lastMessageAt", m.msg_type as "lastMessageType",
+        m.plaintext_body as "lastMessageContent", m.sender_user_id as "lastMessageSenderId",
+        m.created_at as "lastMessageAt", m.message_type as "lastMessageType",
         -- Sender display name
         u.display_name as "lastMessageSenderName",
         -- Unread count
         COALESCE(
-          (SELECT COUNT(*) FROM messages msg 
-           WHERE msg.chat_id = c.id 
+          (SELECT COUNT(*) FROM messages msg
+           WHERE msg.chat_id = c.id
            AND msg.created_at > COALESCE(cm.last_read_at, cm.joined_at)
-           AND msg.sender_id != $1),
+           AND msg.sender_user_id != $1),
           0
         )::int as "unreadCount",
         -- For direct chats: get the other user's name and avatar
-        CASE WHEN c.chat_type = 'direct' THEN 
-          (SELECT ou.display_name FROM chat_members ocm 
-           JOIN users ou ON ou.id = ocm.user_id 
-           WHERE ocm.chat_id = c.id AND ocm.user_id != $1 LIMIT 1)
+        CASE WHEN c.type = 'direct' THEN
+          (SELECT ou.display_name FROM chat_members ocm
+           JOIN users ou ON ou.id = ocm.user_id
+           WHERE ocm.chat_id = c.id AND ocm.user_id != $1 AND ocm.state = 'active' LIMIT 1)
         END as "directPartnerName",
-        CASE WHEN c.chat_type = 'direct' THEN 
-          (SELECT ou.avatar_media_id FROM chat_members ocm 
-           JOIN users ou ON ou.id = ocm.user_id 
-           WHERE ocm.chat_id = c.id AND ocm.user_id != $1 LIMIT 1)
+        CASE WHEN c.type = 'direct' THEN
+          (SELECT ou.avatar_media_id FROM chat_members ocm
+           JOIN users ou ON ou.id = ocm.user_id
+           WHERE ocm.chat_id = c.id AND ocm.user_id != $1 AND ocm.state = 'active' LIMIT 1)
         END as "directPartnerAvatar"
       FROM chat_members cm
       JOIN chats c ON c.id = cm.chat_id
       LEFT JOIN LATERAL (
-        SELECT content, sender_id, created_at, msg_type 
-        FROM messages 
+        SELECT plaintext_body, sender_user_id, created_at, message_type
+        FROM messages
         WHERE chat_id = c.id AND deleted_at IS NULL
         ORDER BY created_at DESC LIMIT 1
       ) m ON true
-      LEFT JOIN users u ON u.id = m.sender_id
-      WHERE cm.user_id = $1 AND cm.member_state = 'active' AND c.state = 'active'
+      LEFT JOIN users u ON u.id = m.sender_user_id
+      WHERE cm.user_id = $1 AND cm.state = 'active' AND c.archived_at IS NULL
       ORDER BY COALESCE(m.created_at, c.created_at) DESC`,
       [userId],
     );
@@ -106,13 +126,13 @@ export class PostgresChatRepository {
   /** Get chat by ID with membership check */
   async getChatById(chatId: string, userId: string) {
     const { rows } = await this.pool.query(
-      `SELECT c.id, c.chat_type as "chatType", c.title, c.description, 
-              c.avatar_media_id as "avatarUrl", c.state,
+      `SELECT c.id, c.type as "chatType", c.title, c.description,
+              c.avatar_media_id as "avatarUrl",
               c.created_by as "createdBy", c.created_at as "createdAt",
               cm.role as "myRole"
        FROM chats c
        JOIN chat_members cm ON cm.chat_id = c.id AND cm.user_id = $2
-       WHERE c.id = $1 AND cm.member_state = 'active'`,
+       WHERE c.id = $1 AND cm.state = 'active' AND c.archived_at IS NULL`,
       [chatId, userId],
     );
     return rows[0] || null;
@@ -126,7 +146,7 @@ export class PostgresChatRepository {
               u.status_text as "statusText"
        FROM chat_members cm
        JOIN users u ON u.id = cm.user_id
-       WHERE cm.chat_id = $1 AND cm.member_state = 'active'
+       WHERE cm.chat_id = $1 AND cm.state = 'active'
        ORDER BY cm.role = 'owner' DESC, cm.joined_at ASC`,
       [chatId],
     );
@@ -137,7 +157,7 @@ export class PostgresChatRepository {
   async updateChat(chatId: string, userId: string, data: { title?: string; description?: string; avatarUrl?: string }) {
     // Verify user is owner/admin
     const { rows: perm } = await this.pool.query(
-      `SELECT role FROM chat_members WHERE chat_id = $1 AND user_id = $2 AND member_state = 'active'`,
+      `SELECT role FROM chat_members WHERE chat_id = $1 AND user_id = $2 AND state = 'active'`,
       [chatId, userId],
     );
     if (!perm[0] || !['owner', 'admin'].includes(perm[0].role)) {
@@ -151,21 +171,22 @@ export class PostgresChatRepository {
     if (data.title !== undefined) { updates.push(`title = $${idx++}`); values.push(data.title); }
     if (data.description !== undefined) { updates.push(`description = $${idx++}`); values.push(data.description); }
     if (data.avatarUrl !== undefined) { updates.push(`avatar_media_id = $${idx++}`); values.push(data.avatarUrl); }
-    updates.push(`updated_at = NOW()`);
 
-    values.push(chatId);
-    await this.pool.query(
-      `UPDATE chats SET ${updates.join(', ')} WHERE id = $${idx}`,
-      values,
-    );
+    if (updates.length > 0) {
+      values.push(chatId);
+      await this.pool.query(
+        `UPDATE chats SET ${updates.join(', ')} WHERE id = $${idx}`,
+        values,
+      );
+    }
 
     return this.getChatById(chatId, userId);
   }
 
-  /** Delete a chat (soft delete) */
+  /** Delete a chat (soft delete via archived_at) */
   async deleteChat(chatId: string, userId: string) {
     const { rows: perm } = await this.pool.query(
-      `SELECT role FROM chat_members WHERE chat_id = $1 AND user_id = $2 AND member_state = 'active'`,
+      `SELECT role FROM chat_members WHERE chat_id = $1 AND user_id = $2 AND state = 'active'`,
       [chatId, userId],
     );
     if (!perm[0] || perm[0].role !== 'owner') {
@@ -173,7 +194,7 @@ export class PostgresChatRepository {
     }
 
     await this.pool.query(
-      `UPDATE chats SET state = 'deleted', updated_at = NOW() WHERE id = $1`,
+      `UPDATE chats SET archived_at = NOW() WHERE id = $1`,
       [chatId],
     );
   }
@@ -181,8 +202,8 @@ export class PostgresChatRepository {
   /** Leave a chat */
   async leaveChat(chatId: string, userId: string) {
     await this.pool.query(
-      `UPDATE chat_members SET member_state = 'left', left_at = NOW() 
-       WHERE chat_id = $1 AND user_id = $2 AND member_state = 'active'`,
+      `UPDATE chat_members SET state = 'left'
+       WHERE chat_id = $1 AND user_id = $2 AND state = 'active'`,
       [chatId, userId],
     );
   }
@@ -190,7 +211,7 @@ export class PostgresChatRepository {
   /** Add member to a chat */
   async addMember(chatId: string, userId: string, addedByUserId: string) {
     const { rows: perm } = await this.pool.query(
-      `SELECT role FROM chat_members WHERE chat_id = $1 AND user_id = $2 AND member_state = 'active'`,
+      `SELECT role FROM chat_members WHERE chat_id = $1 AND user_id = $2 AND state = 'active'`,
       [chatId, addedByUserId],
     );
     if (!perm[0] || !['owner', 'admin'].includes(perm[0].role)) {
@@ -198,17 +219,17 @@ export class PostgresChatRepository {
     }
 
     await this.pool.query(
-      `INSERT INTO chat_members (id, chat_id, user_id, role, member_state, joined_at)
-       VALUES ($1, $2, $3, 'member', 'active', NOW())
-       ON CONFLICT (chat_id, user_id) DO UPDATE SET member_state = 'active', joined_at = NOW()`,
-      [uuidv4(), chatId, userId],
+      `INSERT INTO chat_members (chat_id, user_id, role, state, joined_at)
+       VALUES ($1, $2, 'member', 'active', NOW())
+       ON CONFLICT (chat_id, user_id) DO UPDATE SET state = 'active', joined_at = NOW()`,
+      [chatId, userId],
     );
   }
 
   /** Remove member from a chat */
   async removeMember(chatId: string, userId: string, removedByUserId: string) {
     const { rows: perm } = await this.pool.query(
-      `SELECT role FROM chat_members WHERE chat_id = $1 AND user_id = $2 AND member_state = 'active'`,
+      `SELECT role FROM chat_members WHERE chat_id = $1 AND user_id = $2 AND state = 'active'`,
       [chatId, removedByUserId],
     );
     if (!perm[0] || !['owner', 'admin'].includes(perm[0].role)) {
@@ -216,8 +237,8 @@ export class PostgresChatRepository {
     }
 
     await this.pool.query(
-      `UPDATE chat_members SET member_state = 'removed', left_at = NOW()
-       WHERE chat_id = $1 AND user_id = $2 AND member_state = 'active'`,
+      `UPDATE chat_members SET state = 'left'
+       WHERE chat_id = $1 AND user_id = $2 AND state = 'active'`,
       [chatId, userId],
     );
   }
@@ -225,7 +246,7 @@ export class PostgresChatRepository {
   /** Get member user IDs for a chat (for broadcast) */
   async getMemberUserIds(chatId: string): Promise<string[]> {
     const { rows } = await this.pool.query(
-      `SELECT user_id FROM chat_members WHERE chat_id = $1 AND member_state = 'active'`,
+      `SELECT user_id FROM chat_members WHERE chat_id = $1 AND state = 'active'`,
       [chatId],
     );
     return rows.map(r => r.user_id);
@@ -255,12 +276,13 @@ export class PostgresMessageRepository {
     forwardFromId?: string;
     mediaUrl?: string;
     mediaMetadata?: Record<string, unknown>;
+    idempotencyKey?: string;
   }) {
     const messageId = uuidv4();
-    
+
     // Verify sender is a member of the chat
     const { rows: membership } = await this.pool.query(
-      `SELECT 1 FROM chat_members WHERE chat_id = $1 AND user_id = $2 AND member_state = 'active'`,
+      `SELECT 1 FROM chat_members WHERE chat_id = $1 AND user_id = $2 AND state = 'active'`,
       [data.chatId, data.senderId],
     );
     if (!membership[0]) {
@@ -268,18 +290,14 @@ export class PostgresMessageRepository {
     }
 
     await this.pool.query(
-      `INSERT INTO messages (id, chat_id, sender_id, content, msg_type, reply_to_message_id, 
-                             forward_from_message_id, media_url, media_metadata, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())`,
-      [messageId, data.chatId, data.senderId, data.content, data.msgType,
+      `INSERT INTO messages (id, chat_id, sender_user_id, message_type, plaintext_body,
+                             reply_to_message_id, forward_from_message_id,
+                             media_url, media_metadata, idempotency_key, created_at)
+       VALUES ($1, $2, $3, $4::message_type, $5, $6, $7, $8, $9, $10, NOW())`,
+      [messageId, data.chatId, data.senderId, toDbMessageType(data.msgType), data.content,
        data.replyToId || null, data.forwardFromId || null, data.mediaUrl || null,
-       data.mediaMetadata ? JSON.stringify(data.mediaMetadata) : null],
-    );
-
-    // Update chat's updated_at for sort ordering
-    await this.pool.query(
-      `UPDATE chats SET updated_at = NOW() WHERE id = $1`,
-      [data.chatId],
+       data.mediaMetadata ? JSON.stringify(data.mediaMetadata) : null,
+       data.idempotencyKey || uuidv4()],
     );
 
     // Fetch and return the full message
@@ -307,26 +325,26 @@ export class PostgresMessageRepository {
     params.push(limit);
 
     const { rows } = await this.pool.query(
-      `SELECT m.id, m.chat_id as "chatId", m.sender_id as "senderId", m.content,
-              m.msg_type as "msgType", m.reply_to_message_id as "replyToId",
+      `SELECT m.id, m.chat_id as "chatId", m.sender_user_id as "senderId", m.plaintext_body as "content",
+              m.message_type as "msgType", m.reply_to_message_id as "replyToId",
               m.forward_from_message_id as "forwardFromId",
               m.media_url as "mediaUrl", m.media_metadata as "mediaMetadata",
               m.edited_at as "editedAt", m.deleted_at as "deletedAt",
-              m.created_at as "createdAt", m.updated_at as "updatedAt",
+              m.created_at as "createdAt",
               u.display_name as "senderName", u.avatar_media_id as "senderAvatar",
               -- Reply preview
-              rm.content as "replyContent", rm.sender_id as "replySenderId",
+              rm.plaintext_body as "replyContent", rm.sender_user_id as "replySenderId",
               ru.display_name as "replySenderName",
               -- Reactions count
               (SELECT json_object_agg(emoji, cnt) FROM (
-                SELECT emoji, COUNT(*) as cnt FROM message_reactions 
+                SELECT emoji, COUNT(*) as cnt FROM message_reactions
                 WHERE message_id = m.id GROUP BY emoji
               ) reaction_counts) as reactions
        FROM messages m
-       JOIN chat_members cm ON cm.chat_id = m.chat_id AND cm.user_id = $2 AND cm.member_state = 'active'
-       JOIN users u ON u.id = m.sender_id
+       JOIN chat_members cm ON cm.chat_id = m.chat_id AND cm.user_id = $2 AND cm.state = 'active'
+       JOIN users u ON u.id = m.sender_user_id
        LEFT JOIN messages rm ON rm.id = m.reply_to_message_id
-       LEFT JOIN users ru ON ru.id = rm.sender_id
+       LEFT JOIN users ru ON ru.id = rm.sender_user_id
        WHERE m.chat_id = $1 AND m.deleted_at IS NULL ${cursorClause}
        ORDER BY m.created_at DESC
        LIMIT $${params.length}`,
@@ -343,14 +361,14 @@ export class PostgresMessageRepository {
   /** Get a single message by ID */
   async getMessageById(messageId: string) {
     const { rows } = await this.pool.query(
-      `SELECT m.id, m.chat_id as "chatId", m.sender_id as "senderId", m.content,
-              m.msg_type as "msgType", m.reply_to_message_id as "replyToId",
+      `SELECT m.id, m.chat_id as "chatId", m.sender_user_id as "senderId", m.plaintext_body as "content",
+              m.message_type as "msgType", m.reply_to_message_id as "replyToId",
               m.media_url as "mediaUrl", m.media_metadata as "mediaMetadata",
               m.edited_at as "editedAt", m.deleted_at as "deletedAt",
-              m.created_at as "createdAt", m.updated_at as "updatedAt",
+              m.created_at as "createdAt",
               u.display_name as "senderName", u.avatar_media_id as "senderAvatar"
        FROM messages m
-       JOIN users u ON u.id = m.sender_id
+       JOIN users u ON u.id = m.sender_user_id
        WHERE m.id = $1`,
       [messageId],
     );
@@ -360,8 +378,8 @@ export class PostgresMessageRepository {
   /** Edit a message (only by sender, within time window) */
   async editMessage(messageId: string, userId: string, newContent: string) {
     const { rows } = await this.pool.query(
-      `UPDATE messages SET content = $3, edited_at = NOW(), updated_at = NOW()
-       WHERE id = $1 AND sender_id = $2 AND deleted_at IS NULL
+      `UPDATE messages SET plaintext_body = $3, edited_at = NOW(), state = 'edited'
+       WHERE id = $1 AND sender_user_id = $2 AND deleted_at IS NULL
        AND created_at > NOW() - INTERVAL '48 hours'
        RETURNING id`,
       [messageId, userId, newContent],
@@ -379,17 +397,17 @@ export class PostgresMessageRepository {
     if (deleteForEveryone) {
       // Check if sender or admin
       const { rows } = await this.pool.query(
-        `SELECT m.sender_id, cm.role FROM messages m
+        `SELECT m.sender_user_id, cm.role FROM messages m
          JOIN chat_members cm ON cm.chat_id = m.chat_id AND cm.user_id = $2
          WHERE m.id = $1`,
         [messageId, userId],
       );
-      if (!rows[0] || (rows[0].sender_id !== userId && !['owner', 'admin'].includes(rows[0].role))) {
+      if (!rows[0] || (rows[0].sender_user_id !== userId && !['owner', 'admin'].includes(rows[0].role))) {
         throw new Error('FORBIDDEN: Only sender or admin can delete for everyone');
       }
 
       await this.pool.query(
-        `UPDATE messages SET deleted_at = NOW(), content = '[Message deleted]', updated_at = NOW() WHERE id = $1`,
+        `UPDATE messages SET deleted_at = NOW(), state = 'deleted', plaintext_body = '[Message deleted]' WHERE id = $1`,
         [messageId],
       );
     } else {
@@ -424,13 +442,13 @@ export class PostgresMessageRepository {
   /** Search messages in a chat */
   async searchMessages(chatId: string, userId: string, query: string, limit = 20) {
     const { rows } = await this.pool.query(
-      `SELECT m.id, m.content, m.sender_id as "senderId", m.created_at as "createdAt",
-              m.msg_type as "msgType", u.display_name as "senderName"
+      `SELECT m.id, m.plaintext_body as "content", m.sender_user_id as "senderId", m.created_at as "createdAt",
+              m.message_type as "msgType", u.display_name as "senderName"
        FROM messages m
-       JOIN chat_members cm ON cm.chat_id = m.chat_id AND cm.user_id = $2 AND cm.member_state = 'active'
-       JOIN users u ON u.id = m.sender_id
+       JOIN chat_members cm ON cm.chat_id = m.chat_id AND cm.user_id = $2 AND cm.state = 'active'
+       JOIN users u ON u.id = m.sender_user_id
        WHERE m.chat_id = $1 AND m.deleted_at IS NULL
-       AND m.content ILIKE '%' || $3 || '%'
+       AND m.plaintext_body ILIKE '%' || $3 || '%'
        ORDER BY m.created_at DESC
        LIMIT $4`,
       [chatId, userId, query, limit],
@@ -471,7 +489,7 @@ export class PostgresStoryRepository {
   }) {
     const storyId = uuidv4();
     await this.pool.query(
-      `INSERT INTO stories (id, user_id, media_url, media_type, caption, background_color, 
+      `INSERT INTO stories (id, user_id, media_url, media_type, caption, background_color,
                            duration_seconds, expires_at, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW() + INTERVAL '24 hours', NOW())`,
       [storyId, data.userId, data.mediaUrl, data.mediaType, data.caption || null,
@@ -483,7 +501,7 @@ export class PostgresStoryRepository {
   /** Get stories from users I follow / my contacts (last 24h) */
   async getStoryFeed(userId: string) {
     const { rows } = await this.pool.query(
-      `SELECT s.id, s.user_id as "userId", s.media_url as "mediaUrl", 
+      `SELECT s.id, s.user_id as "userId", s.media_url as "mediaUrl",
               s.media_type as "mediaType", s.caption, s.background_color as "backgroundColor",
               s.duration_seconds as "duration", s.created_at as "createdAt",
               s.expires_at as "expiresAt",
@@ -498,9 +516,9 @@ export class PostgresStoryRepository {
        JOIN users u ON u.id = s.user_id
        WHERE s.expires_at > NOW()
        AND (s.user_id = $1 OR s.user_id IN (
-         SELECT cm.user_id FROM chat_members cm 
+         SELECT cm.user_id FROM chat_members cm
          JOIN chat_members my ON my.chat_id = cm.chat_id AND my.user_id = $1
-         WHERE cm.user_id != $1 AND cm.member_state = 'active'
+         WHERE cm.user_id != $1 AND cm.state = 'active'
        ))
        ORDER BY s.user_id = $1 DESC, s.created_at DESC`,
       [userId],

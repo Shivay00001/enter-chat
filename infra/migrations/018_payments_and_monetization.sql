@@ -110,7 +110,8 @@ CREATE TABLE IF NOT EXISTS p2p_transfers (
     transfer_type   VARCHAR(20) NOT NULL DEFAULT 'send', -- 'send' or 'request'
     note            TEXT,
     chat_id         UUID REFERENCES chats(id),            -- Associated chat
-    message_id      UUID REFERENCES messages(id),         -- System message in chat
+    -- NOTE: no FK to messages(id): messages is partitioned (PK id, created_at).
+    message_id      UUID,                                 -- System message in chat
     completed_at    TIMESTAMPTZ,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

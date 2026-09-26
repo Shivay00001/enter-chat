@@ -51,11 +51,12 @@ transfersRouter.post('/send', authMiddleware, async (req, res, next) => {
     if (body.chatId) {
       const msgId = uuidv4();
       await pool.query(
-        `INSERT INTO messages (id, chat_id, sender_id, content, msg_type, media_metadata, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, 'text', $5, NOW(), NOW())`,
+        `INSERT INTO messages (id, chat_id, sender_user_id, message_type, plaintext_body, media_metadata, idempotency_key, created_at)
+         VALUES ($1, $2, $3, 'system', $4, $5, $6, NOW())`,
         [msgId, body.chatId, senderId,
          `💸 Sent ${formatCurrency(body.amount, 'INR')}${body.note ? ` — "${body.note}"` : ''}`,
-         JSON.stringify({ type: 'payment', transferId: result.transferId, amount: body.amount })],
+         JSON.stringify({ type: 'payment', transferId: result.transferId, amount: body.amount }),
+         uuidv4()],
       );
       messageId = msgId;
     }
@@ -113,11 +114,12 @@ transfersRouter.post('/request', authMiddleware, async (req, res, next) => {
     // If within a chat, send system message
     if (body.chatId) {
       await pool.query(
-        `INSERT INTO messages (id, chat_id, sender_id, content, msg_type, media_metadata, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, 'text', $5, NOW(), NOW())`,
+        `INSERT INTO messages (id, chat_id, sender_user_id, message_type, plaintext_body, media_metadata, idempotency_key, created_at)
+         VALUES ($1, $2, $3, 'system', $4, $5, $6, NOW())`,
         [uuidv4(), body.chatId, requesterId,
          `🔔 Requested ${formatCurrency(body.amount, 'INR')}${body.note ? ` — "${body.note}"` : ''}`,
-         JSON.stringify({ type: 'payment_request', transferId, amount: body.amount })],
+         JSON.stringify({ type: 'payment_request', transferId, amount: body.amount }),
+         uuidv4()],
       );
     }
 

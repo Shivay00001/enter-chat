@@ -28,6 +28,6 @@ ALTER TABLE media_objects ADD COLUMN IF NOT EXISTS original_name TEXT;
 ALTER TABLE media_objects ADD COLUMN IF NOT EXISTS storage_key TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_media_objects_uploader
-  ON media_objects (uploader_user_id, created_at DESC);
+  ON media_objects (owner_user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_media_objects_chat
   ON media_objects (chat_id) WHERE chat_id IS NOT NULL;

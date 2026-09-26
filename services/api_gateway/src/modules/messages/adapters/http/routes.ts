@@ -56,7 +56,7 @@ messagesRouter.post('/:chatId/messages', authMiddleware, async (req, res, next) 
     const pool = getDbPool();
     // Get chat members for push notifications
     const { rows: members } = await pool.query(
-      `SELECT user_id FROM chat_members WHERE chat_id = $1 AND member_state = 'active'`,
+      `SELECT user_id FROM chat_members WHERE chat_id = $1 AND state = 'active'`,
       [chatId]
     );
     const memberUserIds = members.map((m: any) => m.user_id);

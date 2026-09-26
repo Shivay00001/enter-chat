@@ -37,7 +37,7 @@ export class PostgresStoryRepository {
   async getStoryFeedRankedByAffinity(currentUserId: string): Promise<UserStoryGroup[]> {
     const query = `
       WITH ActiveStories AS (
-        SELECT s.*, u.display_name, u.avatar_url
+        SELECT s.*, u.display_name, u.avatar_media_id
         FROM stories s
         JOIN users u ON s.user_id = u.id
         WHERE s.expires_at > NOW()
@@ -47,15 +47,15 @@ export class PostgresStoryRepository {
       DirectMessageAffinity AS (
         SELECT 
           CASE 
-            WHEN m.sender_id = $1 THEN cm.user_id
-            ELSE m.sender_id
+            WHEN m.sender_user_id = $1 THEN cm.user_id
+            ELSE m.sender_user_id
           END as partner_id,
           COUNT(*) * 5 AS score
         FROM messages m
         JOIN chats c ON m.chat_id = c.id
         JOIN chat_members cm ON c.id = cm.chat_id
         WHERE c.type = 'direct'
-          AND (m.sender_id = $1 OR cm.user_id = $1)
+          AND (m.sender_user_id = $1 OR cm.user_id = $1)
           AND m.created_at > NOW() - INTERVAL '30 days'
         GROUP BY partner_id
       ),
@@ -80,7 +80,7 @@ export class PostgresStoryRepository {
       SELECT 
         a.user_id,
         a.display_name,
-        a.avatar_url,
+        a.avatar_media_id,
         COALESCE(ta.affinity_score, 0) AS affinity_score,
         json_agg(
           json_build_object(
@@ -97,7 +97,7 @@ export class PostgresStoryRepository {
         ) as stories
       FROM ActiveStories a
       LEFT JOIN TotalAffinity ta ON a.user_id = ta.user_id
-      GROUP BY a.user_id, a.display_name, a.avatar_url, ta.affinity_score
+      GROUP BY a.user_id, a.display_name, a.avatar_media_id, ta.affinity_score
       ORDER BY affinity_score DESC, MAX(a.created_at) DESC;
     `;
 
@@ -107,7 +107,7 @@ export class PostgresStoryRepository {
       user: {
         id: row.user_id,
         name: row.display_name,
-        avatar: row.avatar_url,
+        avatar: row.avatar_media_id,
       },
       affinityScore: parseInt(row.affinity_score, 10),
       stories: row.stories,

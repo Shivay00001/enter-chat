@@ -10,7 +10,8 @@ CREATE TABLE devices (
   signed_prekey BYTEA,
   last_seen_at TIMESTAMPTZ DEFAULT NOW(),
   trusted_at TIMESTAMPTZ,
-  revoked_at TIMESTAMPTZ
+  revoked_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX idx_devices_user_id ON devices (user_id, revoked_at);

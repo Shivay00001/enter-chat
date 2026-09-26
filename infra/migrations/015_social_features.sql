@@ -14,7 +14,9 @@ CREATE TABLE IF NOT EXISTS stories (
 );
 
 CREATE INDEX IF NOT EXISTS idx_stories_user_id ON stories (user_id);
-CREATE INDEX IF NOT EXISTS idx_stories_expires ON stories (expires_at) WHERE expires_at > NOW();
+CREATE INDEX IF NOT EXISTS idx_stories_expires ON stories (expires_at);
+-- NOTE: a partial predicate like WHERE expires_at > NOW() is rejected on PG16
+-- (non-immutable); expiry filtering is done in queries instead.
 
 -- Story views (who has seen the story)
 CREATE TABLE IF NOT EXISTS story_views (
@@ -36,9 +38,11 @@ CREATE TABLE IF NOT EXISTS story_reactions (
 );
 
 -- Message reactions
+-- NOTE: messages is partitioned with PK (id, created_at), so a plain FK to
+-- messages(id) is not allowed on PG16. message_id is kept as a plain UUID.
 CREATE TABLE IF NOT EXISTS message_reactions (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    message_id  UUID NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
+    message_id  UUID NOT NULL,
     user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     emoji       VARCHAR(8) NOT NULL,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -48,9 +52,10 @@ CREATE TABLE IF NOT EXISTS message_reactions (
 CREATE INDEX IF NOT EXISTS idx_message_reactions_message ON message_reactions (message_id);
 
 -- Message soft deletions (per-user: "delete for me")
+-- NOTE: no FK to messages(id): messages is partitioned (PK id, created_at).
 CREATE TABLE IF NOT EXISTS message_deletions (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    message_id  UUID NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
+    message_id  UUID NOT NULL,
     user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     deleted_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE(message_id, user_id)
@@ -59,7 +64,8 @@ CREATE TABLE IF NOT EXISTS message_deletions (
 -- Add columns to messages table if not exist
 ALTER TABLE messages ADD COLUMN IF NOT EXISTS media_url TEXT;
 ALTER TABLE messages ADD COLUMN IF NOT EXISTS media_metadata JSONB;
-ALTER TABLE messages ADD COLUMN IF NOT EXISTS forward_from_message_id UUID REFERENCES messages(id);
+-- NOTE: no FK on forward_from_message_id — messages is partitioned (PK id, created_at).
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS forward_from_message_id UUID;
 
 -- Add last_read_at to chat_members if not exist
 ALTER TABLE chat_members ADD COLUMN IF NOT EXISTS last_read_at TIMESTAMPTZ;

@@ -173,7 +173,7 @@ export class PostgresUserRepository implements UserRepository {
 
     // Remove from all active chat memberships
     await this.pool.query(
-      `UPDATE chat_members SET member_state = 'left', left_at = NOW() WHERE user_id = $1 AND member_state = 'active'`,
+      `UPDATE chat_members SET state = 'left' WHERE user_id = $1 AND state = 'active'`,
       [userId],
     );
   }

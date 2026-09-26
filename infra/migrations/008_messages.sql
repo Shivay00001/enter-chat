@@ -53,7 +53,9 @@ CREATE TABLE messages_default PARTITION OF messages DEFAULT;
 
 CREATE INDEX idx_messages_chat_created ON messages (chat_id, created_at DESC);
 CREATE INDEX idx_messages_sender_created ON messages (sender_user_id, created_at DESC);
-CREATE UNIQUE INDEX idx_messages_idempotency ON messages (sender_user_id, idempotency_key);
+-- NOTE: unique indexes on a partitioned table must include the partition key
+-- (created_at). True sender-level idempotency is enforced at the application layer.
+CREATE UNIQUE INDEX idx_messages_idempotency ON messages (sender_user_id, idempotency_key, created_at);
 CREATE INDEX idx_messages_thread ON messages (thread_root_id, created_at) WHERE thread_root_id IS NOT NULL;
 
 -- Reactions
