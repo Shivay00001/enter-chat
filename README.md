@@ -1,5 +1,7 @@
 # EnterChat
 
+Built by [VisionQuantech](https://visionquantech.com) — AI agents, apps & tools for small businesses.
+
 Decentralized, secure, scalable communication platform.
 
 ## Architecture
